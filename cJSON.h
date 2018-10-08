@@ -34,7 +34,8 @@ extern "C"
 
 #ifdef __WINDOWS__
 
-/* When compiling for windows, we specify a specific calling convention to avoid issues where we are being called from a project with a different default calling convention.  For windows you have 3 define options:
+/* When compiling for windows, we specify a specific calling convention to avoid issues where we 
+are being called from a project with a different default calling convention.  For windows you have 3 define options:
 
 CJSON_HIDE_SYMBOLS - Define this in the case where you don't want to ever dllexport symbols
 CJSON_EXPORT_SYMBOLS - Define this on library build when you want to dllexport symbols (default)
@@ -100,7 +101,7 @@ then using the CJSON_API_VISIBILITY flag to "export" the same symbols the way CJ
 #define cJSON_StringIsConst 512
 
 /* The cJSON structure: */
-typedef struct cJSON
+typedef struct cJSON  //cJSON的结构体定义
 {
     /* next/prev allow you to walk array/object chains. Alternatively, use GetArraySize/GetArrayItem/GetObjectItem */
     struct cJSON *next;
