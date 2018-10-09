@@ -21,9 +21,15 @@
 */
 
 #ifndef cJSON__h
-#define cJSON__h
+#define cJSON__h  //这是为了防止头文件被重复引用。
 
 #ifdef __cplusplus
+/*********************************************
+ * extern "C"的主要作用就是为了能够正确实现C++代码调用其他C语言代码。
+ * 加上extern "C"后，会指示编译器这部分代码按C语言的进行编译，而不是C++的。
+ * 由于C++支持函数重载，因此编译器编译函数的过程中会将函数的参数类型也加到编译后的代码中，而不仅仅是函数名；
+ * 而C语言并不支持函数重载，因此编译C语言代码的函数时不会带上函数的参数类型，一般之包括函数名。
+ * ******************************************/
 extern "C"
 {
 #endif
@@ -86,7 +92,7 @@ then using the CJSON_API_VISIBILITY flag to "export" the same symbols the way CJ
 
 #include <stddef.h>
 
-/* cJSON Types: */
+/* cJSON Types: 这些宏定义是对结构体type的值定义，处理时只需要将type的值&255进行位运算，即可得到json里储存的数据类型。*/
 #define cJSON_Invalid (0)
 #define cJSON_False  (1 << 0)
 #define cJSON_True   (1 << 1)
@@ -104,30 +110,31 @@ then using the CJSON_API_VISIBILITY flag to "export" the same symbols the way CJ
 typedef struct cJSON  //cJSON的结构体定义
 {
     /* next/prev allow you to walk array/object chains. Alternatively, use GetArraySize/GetArrayItem/GetObjectItem */
-    struct cJSON *next;
-    struct cJSON *prev;
+    struct cJSON *next; /*该节点指向后节点的指针*/
+    struct cJSON *prev; /*该节点指向前节点的指针*/
     /* An array or object item will have a child pointer pointing to a chain of the items in the array/object. */
-    struct cJSON *child;
+    struct cJSON *child; /*一个数组或对象节点会拥有一个指向子节点组成的链表的指针*/
 
     /* The type of the item, as above. */
-    int type;
+    int type; /*节点类型*/
 
     /* The item's string, if type==cJSON_String  and type == cJSON_Raw */
-    char *valuestring;
+    char *valuestring; /* 如果这个节点的type等于cJSON_String，就会具有这个字段的信息 */
     /* writing to valueint is DEPRECATED, use cJSON_SetNumberValue instead */
-    int valueint;
+    int valueint; /* 如果这个节点的type等于cJSON_Number，就会具有这个字段的信息*/
     /* The item's number, if type==cJSON_Number */
-    double valuedouble;
+    double valuedouble; /* 如果这个节点的type等于cJSON_Number，就会具有这个字段的信息*/
 
     /* The item's name string, if this item is the child of, or is in the list of subitems of an object. */
-    char *string;
+    char *string; /* 如果这个节点是一个儿子节点或者某个object的子节点的集合，这个字段表明了这个节点的名字 */
 } cJSON;
 
 typedef struct cJSON_Hooks
 {
       /* malloc/free are CDECL on Windows regardless of the default calling convention of the compiler, so ensure the hooks allow passing those functions directly. */
-      void *(CJSON_CDECL *malloc_fn)(size_t sz);
-      void (CJSON_CDECL *free_fn)(void *ptr);
+      /*第一对括号起聚合作用，它迫使间接访问在函数调用之前，第二对括号是函数调用操作符*/
+      void *(CJSON_CDECL *malloc_fn)(size_t sz); /*[malloc_fn]是一个函数指针，指向的函数的返回值类型是void*型指针，参数为size_t型*/
+      void (CJSON_CDECL *free_fn)(void *ptr); /*[free_fn]是一个函数指针，指向的函数参数为void*型，返回值为void型*/
 } cJSON_Hooks;
 
 typedef int cJSON_bool;
@@ -190,6 +197,7 @@ CJSON_PUBLIC(cJSON_bool) cJSON_IsObject(const cJSON * const item);
 CJSON_PUBLIC(cJSON_bool) cJSON_IsRaw(const cJSON * const item);
 
 /* These calls create a cJSON item of the appropriate type. */
+/* 这些调用创建适当类型的cJSON项*/
 CJSON_PUBLIC(cJSON *) cJSON_CreateNull(void);
 CJSON_PUBLIC(cJSON *) cJSON_CreateTrue(void);
 CJSON_PUBLIC(cJSON *) cJSON_CreateFalse(void);

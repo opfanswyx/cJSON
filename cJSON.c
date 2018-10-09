@@ -84,7 +84,7 @@ CJSON_PUBLIC(char *) cJSON_GetStringValue(cJSON *item) {
 #if (CJSON_VERSION_MAJOR != 1) || (CJSON_VERSION_MINOR != 7) || (CJSON_VERSION_PATCH != 8)
     #error cJSON.h and cJSON.c have different versions. Make sure that both have the same.
 #endif
-
+/*返回cJSON的版本信息*/
 CJSON_PUBLIC(const char*) cJSON_Version(void)
 {
     static char version[15];
@@ -94,6 +94,7 @@ CJSON_PUBLIC(const char*) cJSON_Version(void)
 }
 
 /* Case insensitive string comparison, doesn't consider two NULL pointers equal though */
+/*不区分大小写的字符串比较，不考虑两个空指针相等*/
 static int case_insensitive_strcmp(const unsigned char *string1, const unsigned char *string2)
 {
     if ((string1 == NULL) || (string2 == NULL))
@@ -117,8 +118,8 @@ static int case_insensitive_strcmp(const unsigned char *string1, const unsigned 
     return tolower(*string1) - tolower(*string2);
 }
 
-typedef struct internal_hooks
-{
+typedef struct internal_hooks   /*定义内部钩子*/
+{   //函数指针
     void *(CJSON_CDECL *allocate)(size_t size);
     void (CJSON_CDECL *deallocate)(void *pointer);
     void *(CJSON_CDECL *reallocate)(void *pointer, size_t size);
@@ -167,6 +168,8 @@ static unsigned char* cJSON_strdup(const unsigned char* string, const internal_h
     return copy;
 }
 
+
+/* 该函数可以用来替换用户自定义的malloc和free函数 */
 CJSON_PUBLIC(void) cJSON_InitHooks(cJSON_Hooks* hooks)
 {
     if (hooks == NULL)
@@ -198,19 +201,20 @@ CJSON_PUBLIC(void) cJSON_InitHooks(cJSON_Hooks* hooks)
     }
 }
 
-/* Internal constructor. */
+/* Internal constructor. (内部构造函数)*/
+/* 创建cJSON结构体*/
 static cJSON *cJSON_New_Item(const internal_hooks * const hooks)
 {
     cJSON* node = (cJSON*)hooks->allocate(sizeof(cJSON));
     if (node)
     {
-        memset(node, '\0', sizeof(cJSON));
+        memset(node, '\0', sizeof(cJSON)); //初始化结构体
     }
 
     return node;
 }
 
-/* Delete a cJSON structure. */
+/* Delete a cJSON structure. (删除CJSON结构)*/
 CJSON_PUBLIC(void) cJSON_Delete(cJSON *item)
 {
     cJSON *next = NULL;
@@ -276,7 +280,7 @@ static cJSON_bool parse_number(cJSON * const item, parse_buffer * const input_bu
         return false;
     }
 
-    /* copy the number into a temporary buffer and replace '.' with the decimal point
+    /* copy the number into a temporary buffer and replace '.' with the decimal point(小数点)
      * of the current locale (for strtod)
      * This also takes care of '\0' not necessarily being available for marking the end of the input */
     for (i = 0; (i < (sizeof(number_c_string) - 1)) && can_access_at_index(input_buffer, i); i++)
@@ -370,6 +374,10 @@ typedef struct
 } printbuffer;
 
 /* realloc printbuffer if necessary to have at least "needed" bytes more */
+/******************************************************************
+ *  ensure 函数 是一个 协助 printbuffer 分配内存的一个函数  
+ * len 表示当前字符串的字符串起始偏移量 即 newbuffer+p->offset 起始的
+ ****************************************************************/
 static unsigned char* ensure(printbuffer * const p, size_t needed)
 {
     unsigned char *newbuffer = NULL;
@@ -392,7 +400,7 @@ static unsigned char* ensure(printbuffer * const p, size_t needed)
         return NULL;
     }
 
-    needed += p->offset + 1;
+    needed += p->offset + 1; //需要额外分配的内存 也就是偏移量
     if (needed <= p->length)
     {
         return p->buffer + p->offset;
@@ -536,7 +544,7 @@ static cJSON_bool print_number(const cJSON * const item, printbuffer * const out
     return true;
 }
 
-/* parse 4 digit hexadecimal number */
+/* parse 4 digit hexadecimal number (解析4位16进制数)*/
 static unsigned parse_hex4(const unsigned char * const input)
 {
     unsigned int h = 0;
@@ -1081,7 +1089,9 @@ CJSON_PUBLIC(cJSON *) cJSON_Parse(const char *value)
 {
     return cJSON_ParseWithOpts(value, 0, 0);
 }
+//=================================================================================
 
+//=================================================================================
 #define cjson_min(a, b) ((a < b) ? a : b)
 
 static unsigned char *print(const cJSON * const item, cJSON_bool format, const internal_hooks * const hooks)
@@ -1336,6 +1346,8 @@ static cJSON_bool print_value(const cJSON * const item, printbuffer * const outp
             return false;
     }
 }
+//==================================================================================
+
 
 /* Build an array from input text. */
 static cJSON_bool parse_array(cJSON * const item, parse_buffer * const input_buffer)
@@ -1812,7 +1824,7 @@ CJSON_PUBLIC(cJSON_bool) cJSON_HasObjectItem(const cJSON *object, const char *st
     return cJSON_GetObjectItem(object, string) ? 1 : 0;
 }
 
-/* Utility for array list handling. */
+/* Utility for array list handling. (添加双向列表尾部)*/
 static void suffix_object(cJSON *prev, cJSON *item)
 {
     prev->next = item;
@@ -1841,6 +1853,8 @@ static cJSON *create_reference(const cJSON *item, const internal_hooks * const h
     return reference;
 }
 
+
+//==================================================================================
 static cJSON_bool add_item_to_array(cJSON *array, cJSON *item)
 {
     cJSON *child = NULL;
@@ -2067,6 +2081,9 @@ CJSON_PUBLIC(cJSON*) cJSON_AddArrayToObject(cJSON * const object, const char * c
     cJSON_Delete(array);
     return NULL;
 }
+//==================================================================================
+
+
 
 CJSON_PUBLIC(cJSON *) cJSON_DetachItemViaPointer(cJSON *parent, cJSON * const item)
 {
@@ -2242,7 +2259,11 @@ CJSON_PUBLIC(void) cJSON_ReplaceItemInObjectCaseSensitive(cJSON *object, const c
     replace_item_in_object(object, string, newitem, true);
 }
 
-/* Create basic types: */
+//===================================================================================
+/*************************************************
+ *  Create basic types: cJSON的创建
+ * 
+ * ***********************************************/
 CJSON_PUBLIC(cJSON *) cJSON_CreateNull(void)
 {
     cJSON *item = cJSON_New_Item(&global_hooks);
@@ -2545,6 +2566,7 @@ CJSON_PUBLIC(cJSON *) cJSON_CreateStringArray(const char **strings, int count)
 
     return a;
 }
+//=================================================================================
 
 /* Duplication */
 CJSON_PUBLIC(cJSON *) cJSON_Duplicate(const cJSON *item, cJSON_bool recurse)
